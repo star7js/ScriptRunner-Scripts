@@ -36,10 +36,10 @@ try {
             jsmReport += jsmResults.collect { "${it.email} | ${it.projectName} | ${it.projectKey} | ${it.requestType}" }.join('\n') + "\n"
         }
         
-        // General Mail Handlers Query (non-JSM incoming handlers)
+        // General Mail Handlers Query (non-JSM incoming handlers) - Fixed column to mailusername
         def generalQuery = '''
         SELECT sc.id AS "Handler ID", sc.servicename AS "Handler Name", 
-               ms.servername AS "Mail Server Name", ms.username AS "Email Address",
+               ms.servername AS "Mail Server Name", ms.mailusername AS "Email Address",
                ps.propertyvalue AS "Handler Params"
         FROM serviceconfig sc
         INNER JOIN propertyentry pe ON pe.property_key = 'popserver' AND pe.entity_id = sc.id
