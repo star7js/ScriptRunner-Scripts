@@ -97,15 +97,17 @@ def report = allGroups.collect { groupName ->
 
 // =============== OUTPUT ===============
 if (OUTPUT_FORMAT == "CSV") {
-    def csv = "Group,Browse Projects,Roles Projects,Security Levels,Total Unique Projects,Project List,Security Details\n"
+    def csv = new StringBuilder()
+    csv << "Group,Browse Projects,Roles Projects,Security Levels,Total Unique Projects,Project List,Security Details\n"
     report.each {
         csv << "\"${it.group}\",${it.browse},${it.roles},${it.security},${it.totalProjects},\"${it.projectList}\",\"${it.securityList}\"\n"
     }
     return "<pre>${csv}</pre><p>Copy → paste into .csv</p>"
 }
 
-// HTML output (safe slashy strings)
-def html = /
+// HTML output (using StringBuilder + triple-quotes: safe for multiline/interpolation)
+def sb = new StringBuilder()
+sb << """
 <style>
   table {border-collapse:collapse;width:100%;font-family:Arial;font-size:13px;}
   th,td {border:1px solid #ccc;padding:8px;text-align:left;}
@@ -116,41 +118,4 @@ def html = /
   .low  {background:#d4edda;}
   details {margin:4px 0;}
 </style>
-<h2>Jira Group Access Heatmap</h2>
-<p><b>${report.size()}</b> groups with access • <b>${totalProjects}</b> total projects • 
-   Generated in ${(System.currentTimeMillis() - start)/1000.0}s</p>
-<table>
-  <tr>
-    <th>Group</th><th>Browse</th><th>Roles</th><th>Security</th><th>Total Projects</th><th>Details</th>
-  </tr>
-/ 
-
-report.each { row ->
-    def highlight = row.totalProjects >= MIN_PROJECTS_TO_HIGHLIGHT ? 'high' :
-                    row.totalProjects >= totalProjects * 0.5      ? 'med'  : 'low'
-    def adminLink = "<a href='/secure/admin/user/GroupBrowser.jspa?name=${row.group}' target='_blank'>${row.group}</a>"
-
-    html += "<tr class='${highlight}'>"
-    html += "<td><b>${adminLink}</b></td>"
-    html += "<td>${row.browse}</td>"
-    html += "<td>${row.roles}</td>"
-    html += "<td>${row.security}</td>"
-    html += "<td>${row.totalProjects}</td>"
-    html += "<td>"
-    if (row.totalProjects > 0)
-        html += "<details><summary>${row.totalProjects} projects</summary><small>${row.projectList}</small></details>"
-    if (row.security > 0)
-        html += "<br><details><summary>Security levels</summary><small>${row.securityList}</small></details>"
-    html += "</td></tr>"
-}
-
-html += /
-</table>
-<p><b>Color code:</b> 
-   <span class='high'>High (≥${MIN_PROJECTS_TO_HIGHLIGHT})</span> • 
-   <span class='med'>Medium</span> • 
-   <span class='low'>Low</span>
-</p>
-/
-
-return html
+<h2>Jira
